@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
@@ -27,6 +28,10 @@ public class FlickrFetchr {
 
     private static final String TAG = "FlickrFetchr";
     private static final String API_KEY = "078004c8d5ef10723e5aa5c5ea5f8ebb";
+
+    private int mPages;
+    private int mPerpage;
+    private int mTotle;
 
     public byte[] getUrlBytes(String urlSpec) throws IOException {
         URL url = new URL(urlSpec);
@@ -70,26 +75,40 @@ public class FlickrFetchr {
                     .build().toString();
             String jsonString = getUrlString(url);
             Log.i(TAG, "Received JSON; " + jsonString);
-            JSONObject jsonBody = new JSONObject(jsonString);
-            parseItems(items, jsonBody);
+            Gson gson = new GsonBuilder().create();
+            PhotoRequestResult requestResult = gson.fromJson(jsonString, PhotoRequestResult.class);
+            items = requestResult.getPhotos().getPhotos();
+            mPages = requestResult.getPhotos().getPages();
+            mPerpage = requestResult.getPhotos().getPerpage();
+            mTotle = requestResult.getPhotos().getTotal();
         } catch (IOException ioe) {
             Log.e(TAG, "Failed to fetch items", ioe);
-        } catch (JSONException je) {
-            Log.e(TAG, "Failed to parse JSON", je);
         }
 
         return items;
     }
 
-    private void parseItems(List<GalleryItem> items, JSONObject jsonBody) throws IOException, JSONException{
-        Gson gson = new Gson();
-        Type galleyItemType = new TypeToken<ArrayList<GalleryItem>>(){}.getType();
+    public int getPages() {
+        return mPages;
+    }
 
-        JSONObject photosJsonObject = jsonBody.getJSONObject("photos");
-        JSONArray photosJsonArray = photosJsonObject.getJSONArray("photo");
-        String jsonPhotosString = photosJsonArray.toString();
+    public void setPages(int pages) {
+        mPages = pages;
+    }
 
-        List<GalleryItem> galleyItemList =  gson.fromJson(jsonPhotosString,galleyItemType);
-        items.addAll(galleyItemList);
+    public int getPerpage() {
+        return mPerpage;
+    }
+
+    public void setPerpage(int perpage) {
+        mPerpage = perpage;
+    }
+
+    public int getTotle() {
+        return mTotle;
+    }
+
+    public void setTotle(int totle) {
+        mTotle = totle;
     }
 }

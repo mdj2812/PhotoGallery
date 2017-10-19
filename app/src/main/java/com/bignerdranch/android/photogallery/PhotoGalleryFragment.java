@@ -26,6 +26,10 @@ public class PhotoGalleryFragment extends Fragment {
 
     private RecyclerView mPhotoRecyclerView;
     private List<GalleryItem> mItems = new ArrayList<>();
+    private FlickrFetchr mFlickrFetchr = new FlickrFetchr();
+    private int mTotalPage;
+    private int mCurrentPage;
+    private int mItemPerPage;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -45,6 +49,14 @@ public class PhotoGalleryFragment extends Fragment {
 
         mPhotoRecyclerView = (RecyclerView) v.findViewById(R.id.photo_recycler_view);
         mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+        mPhotoRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (dy > 0 || dx < 0) {
+
+                }
+            }
+        });
 
         setupAdapter();
 
@@ -104,8 +116,9 @@ public class PhotoGalleryFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(List<GalleryItem> galleryItems) {
-            mItems = galleryItems;
+        protected void onPostExecute(List<GalleryItem> items) {
+            // TODO: set values for TotalPage, CurrentPage, itemPerPage and totalItem
+            mItems = items;
             setupAdapter();
         }
     }

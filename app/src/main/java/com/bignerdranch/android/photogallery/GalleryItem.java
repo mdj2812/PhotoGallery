@@ -6,16 +6,12 @@ import com.google.gson.annotations.SerializedName;
 /**
  * Created by MA on 19/10/2017.
  */
-
 public class GalleryItem {
     @SerializedName("title")
-    @Expose()
     private String mCaption;
     @SerializedName("id")
-    @Expose()
     private String mId;
     @SerializedName("url_s")
-    @Expose()
     private String mUrl;
 
     @Override
