@@ -5,16 +5,10 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -31,7 +25,7 @@ public class FlickrFetchr {
 
     private int mPages;
     private int mPerpage;
-    private int mTotle;
+    private int mTotal;
 
     public byte[] getUrlBytes(String urlSpec) throws IOException {
         URL url = new URL(urlSpec);
@@ -61,7 +55,7 @@ public class FlickrFetchr {
         return new String(getUrlBytes(urlSpec));
     }
 
-    public List<GalleryItem> fetchItems() {
+    public List<GalleryItem> fetchItems(int page) {
 
         List<GalleryItem> items = new ArrayList<>();
         try {
@@ -71,6 +65,7 @@ public class FlickrFetchr {
                     .appendQueryParameter("api_key", API_KEY)
                     .appendQueryParameter("format", "json")
                     .appendQueryParameter("nojsoncallback", "1")
+                    .appendQueryParameter("page", Integer.toString(page))
                     .appendQueryParameter("extras", "url_s")
                     .build().toString();
             String jsonString = getUrlString(url);
@@ -80,7 +75,7 @@ public class FlickrFetchr {
             items = requestResult.getPhotos().getPhotos();
             mPages = requestResult.getPhotos().getPages();
             mPerpage = requestResult.getPhotos().getPerpage();
-            mTotle = requestResult.getPhotos().getTotal();
+            mTotal = requestResult.getPhotos().getTotal();
         } catch (IOException ioe) {
             Log.e(TAG, "Failed to fetch items", ioe);
         }
@@ -104,11 +99,11 @@ public class FlickrFetchr {
         mPerpage = perpage;
     }
 
-    public int getTotle() {
-        return mTotle;
+    public int getTotal() {
+        return mTotal;
     }
 
-    public void setTotle(int totle) {
-        mTotle = totle;
+    public void setTotal(int total) {
+        mTotal = total;
     }
 }

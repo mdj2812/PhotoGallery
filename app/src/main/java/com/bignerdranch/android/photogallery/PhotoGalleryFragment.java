@@ -25,10 +25,12 @@ public class PhotoGalleryFragment extends Fragment {
     private static final String TAG = "PhotoGalleryFragment";
 
     private RecyclerView mPhotoRecyclerView;
+    private GridLayoutManager mGridLayoutManager;
     private List<GalleryItem> mItems = new ArrayList<>();
+    private PhotoAdapter mPhotoAdapter;
     private FlickrFetchr mFlickrFetchr = new FlickrFetchr();
     private int mTotalPage;
-    private int mCurrentPage;
+    private int mCurrentPage = 1;
     private int mItemPerPage;
 
     public static PhotoGalleryFragment newInstance() {
@@ -39,7 +41,7 @@ public class PhotoGalleryFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        new FetchItemTask().execute();
+        new FetchItemTask().execute(mCurrentPage);
     }
 
     @Nullable
@@ -47,13 +49,28 @@ public class PhotoGalleryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
 
+        mGridLayoutManager = new GridLayoutManager((getActivity()), 3);
         mPhotoRecyclerView = (RecyclerView) v.findViewById(R.id.photo_recycler_view);
-        mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+        mPhotoRecyclerView.setLayoutManager(mGridLayoutManager);
         mPhotoRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 if (dy > 0 || dx < 0) {
-
+                    if (dy > 0 && mCurrentPage < mTotalPage && mGridLayoutManager.findLastVisibleItemPosition() >= (mItems.size() - 1)) {
+                        mCurrentPage++;
+                        new FetchItemTask().execute(mCurrentPage);
+                    } else {
+                        int firstVisibleItem = mGridLayoutManager.findFirstVisibleItemPosition();
+                        int calcPage = 0;
+                        if (firstVisibleItem < mItemPerPage) {
+                            calcPage = 1;
+                        } else {
+                            calcPage = (firstVisibleItem / mItemPerPage) + (firstVisibleItem % mItemPerPage == 0 ? 0 : 1);
+                        }
+                        if (calcPage != mCurrentPage) {
+                            mCurrentPage = calcPage;
+                        }
+                    }
                 }
             }
         });
@@ -65,7 +82,12 @@ public class PhotoGalleryFragment extends Fragment {
 
     private void setupAdapter() {
         if (isAdded()) {
-            mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems));
+            if (mPhotoAdapter == null) {
+                mPhotoAdapter = new PhotoAdapter(mItems);
+            } else {
+                mPhotoAdapter.addItems(mItems);
+            }
+            mPhotoRecyclerView.setAdapter(mPhotoAdapter);
         }
     }
 
@@ -107,19 +129,27 @@ public class PhotoGalleryFragment extends Fragment {
         public int getItemCount() {
             return mGalleryItems.size();
         }
+
+        public PhotoAdapter addItems(List<GalleryItem> galleryItems) {
+            mGalleryItems.addAll(galleryItems);
+            return this;
+        }
     }
 
-    private class FetchItemTask extends AsyncTask<Void, Void, List<GalleryItem>> {
+    private class FetchItemTask extends AsyncTask<Integer, Void, List<GalleryItem>> {
         @Override
-        protected List<GalleryItem> doInBackground(Void... params) {
-            return new FlickrFetchr().fetchItems();
+        protected List<GalleryItem> doInBackground(Integer... params) {
+            mFlickrFetchr = new FlickrFetchr();
+            return mFlickrFetchr.fetchItems(params[0]);
         }
 
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
-            // TODO: set values for TotalPage, CurrentPage, itemPerPage and totalItem
             mItems = items;
             setupAdapter();
+
+            mTotalPage = mFlickrFetchr.getPages();
+            mItemPerPage = mFlickrFetchr.getPerpage();
         }
     }
 }
