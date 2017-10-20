@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.StrictMode;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
@@ -17,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.LruCache;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
@@ -33,6 +35,7 @@ public class PhotoGalleryFragment extends Fragment {
 
     private RecyclerView mPhotoRecyclerView;
     private List<GalleryItem> mItems = new ArrayList<>();
+    private Picasso mPicasso;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -41,8 +44,10 @@ public class PhotoGalleryFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        StrictMode.enableDefaults();
         setRetainInstance(true);
         new FetchItemTask().execute();
+        mPicasso = new Picasso.Builder(getActivity()).memoryCache(new LruCache(24000)).build();
     }
 
     @Nullable
@@ -78,7 +83,7 @@ public class PhotoGalleryFragment extends Fragment {
         }
 
         public void bindGalleryItem(GalleryItem galleryItem) {
-            Picasso.with(getActivity())
+            mPicasso.with(getActivity())
                     .load(galleryItem.getUrl())
                     .placeholder(R.drawable.bill_up_close)
                     .into(mItemImageView);
@@ -102,8 +107,9 @@ public class PhotoGalleryFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(PhotoHolder holder, int position) {
-            GalleryItem galleryItem = mGalleryItems.get(position);
-            holder.bindGalleryItem(galleryItem);
+            for(int i = (position > 10 ? (position - 10) : 0); i < (position < mItems.size() - 10 ? (mItems.size() - 10) : mItems.size() - 1); i++) {
+                holder.bindGalleryItem(mGalleryItems.get(position));
+            }
         }
 
         @Override
