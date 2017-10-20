@@ -36,6 +36,7 @@ public class PhotoGalleryFragment extends Fragment {
     private static final String TAG = "PhotoGalleryFragment";
 
     private RecyclerView mPhotoRecyclerView;
+    private TextView mStateIndicator;
     private List<GalleryItem> mItems = new ArrayList<>();
 
     public static PhotoGalleryFragment newInstance() {
@@ -54,6 +55,8 @@ public class PhotoGalleryFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
+
+        mStateIndicator = (TextView) v.findViewById(R.id.state_indicator);
 
         mPhotoRecyclerView = (RecyclerView) v.findViewById(R.id.photo_recycler_view);
         mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
@@ -76,6 +79,10 @@ public class PhotoGalleryFragment extends Fragment {
             public boolean onQueryTextSubmit(String query) {
                 Log.d(TAG, "QueryTextSubmit: " + query);
                 QueryPreferences.setStoredQuery(getActivity(), query);
+                searchView.onActionViewCollapsed();
+                mStateIndicator.setVisibility(View.VISIBLE);
+                mItems.clear();
+                setupAdapter();
                 updateItems();
                 return true;
             }
@@ -186,6 +193,7 @@ public class PhotoGalleryFragment extends Fragment {
         @Override
         protected void onPostExecute(List<GalleryItem> galleryItems) {
             mItems = galleryItems;
+            mStateIndicator.setVisibility(View.INVISIBLE);
             setupAdapter();
         }
     }
