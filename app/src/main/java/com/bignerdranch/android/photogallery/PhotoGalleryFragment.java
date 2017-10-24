@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -104,7 +105,7 @@ public class PhotoGalleryFragment extends Fragment {
         });
 
         MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
-        if (PollService.isServiceAlarmOn(getActivity())) {
+        if (isPollServiceAlarmOn()) {
             toggleItem.setTitle(R.string.stop_polling);
         } else {
             toggleItem.setTitle(R.string.start_polling);
@@ -119,8 +120,8 @@ public class PhotoGalleryFragment extends Fragment {
                 updateItems();
                 return true;
             case R.id.menu_item_toggle_polling:
-                boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
-                PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+                boolean shouldStartAlarm = !isPollServiceAlarmOn();
+                setPollServiceAlarm(shouldStartAlarm);
                 getActivity().invalidateOptionsMenu();
                 return true;
             default:
@@ -139,7 +140,24 @@ public class PhotoGalleryFragment extends Fragment {
         }
     }
 
-    private class PhotoHolder extends RecyclerView.ViewHolder {
+    private void setPollServiceAlarm(boolean shouldStartAlarm) {
+        if ( android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ) {
+            PollJobService.setServiceAlarm( getActivity(), shouldStartAlarm );
+        }
+        else {
+            PollIntentService.setServiceAlarm( getActivity(), shouldStartAlarm );
+        }
+    }
+
+    private boolean isPollServiceAlarmOn() {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return PollJobService.isServiceAlarmOn(getActivity());
+        } else {
+            return PollIntentService.isServiceAlarmOn(getActivity());
+        }
+    }
+
+        private class PhotoHolder extends RecyclerView.ViewHolder {
         private ImageView mItemImageView;
 
         public PhotoHolder(View itemView) {
